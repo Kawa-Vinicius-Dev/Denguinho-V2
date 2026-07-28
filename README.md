@@ -117,9 +117,9 @@ O pool do backend usa no máximo cinco conexões por padrão, adequado ao comput
 
 ## Segurança
 
-Segredos, tokens e fotos pessoais não são versionados. A foto do casal usada no
-desenvolvimento fica em `storage/private/couple-photos` e só é entregue pela API
-autenticada. A imagem pública é um fallback genérico.
+Segredos, tokens e fotos pessoais não são versionados. As fotos privadas ficam
+no PostgreSQL do Supabase e só são entregues pela API autenticada. A imagem
+pública é um fallback genérico.
 
 ## Versão anterior
 

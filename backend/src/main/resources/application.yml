@@ -29,6 +29,7 @@ spring:
     enabled: true
 
 server:
+  port: ${PORT:8080}
   error:
     include-message: never
 
@@ -38,8 +39,6 @@ app:
     expiration: PT8H
   cors:
     allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:5173}
-  storage:
-    path: ${APP_STORAGE_PATH:../storage/private/couple-photos}
 
 springdoc:
   swagger-ui:

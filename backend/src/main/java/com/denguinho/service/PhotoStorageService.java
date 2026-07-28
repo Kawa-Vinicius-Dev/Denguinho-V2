@@ -1,17 +1,14 @@
 package com.denguinho.service;
 
 import com.denguinho.exception.BusinessException;
-import org.springframework.beans.factory.annotation.Value;
+import com.denguinho.repository.StoredPhotoRepository;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.Map;
 import java.util.UUID;
 
@@ -23,20 +20,23 @@ public class PhotoStorageService {
             "image/png", ".png",
             "image/webp", ".webp"
     );
-    private final Path root;
+    private final StoredPhotoRepository storedPhotoRepository;
 
-    public PhotoStorageService(@Value("${app.storage.path}") String storagePath) {
-        this.root = Path.of(storagePath).toAbsolutePath().normalize();
+    public PhotoStorageService(StoredPhotoRepository storedPhotoRepository) {
+        this.storedPhotoRepository = storedPhotoRepository;
     }
 
-    public String store(UUID coupleId, MultipartFile photo) {
+    public String store(UUID ownerId, MultipartFile photo) {
         validate(photo);
         String extension = EXTENSIONS.get(photo.getContentType());
-        String filename = coupleId + "-" + UUID.randomUUID() + extension;
+        String filename = ownerId + "-" + UUID.randomUUID() + extension;
         try {
-            Files.createDirectories(root);
-            Path destination = safeResolve(filename);
-            Files.copy(photo.getInputStream(), destination, StandardCopyOption.REPLACE_EXISTING);
+            storedPhotoRepository.save(
+                    filename,
+                    ownerId,
+                    photo.getContentType(),
+                    photo.getBytes()
+            );
             return filename;
         } catch (IOException exception) {
             throw new BusinessException(
@@ -48,34 +48,23 @@ public class PhotoStorageService {
     }
 
     public Resource load(String filename) {
-        try {
-            Path file = safeResolve(filename);
-            Resource resource = new UrlResource(file.toUri());
-            if (!resource.exists() || !resource.isReadable()) {
-                throw new IOException("Arquivo indisponível");
-            }
-            return resource;
-        } catch (IOException exception) {
-            throw new BusinessException(
-                    HttpStatus.NOT_FOUND,
-                    "PHOTO_NOT_FOUND",
-                    "A foto não está disponível."
-            );
-        }
+        return storedPhotoRepository.findByFilename(filename)
+                .<Resource>map(stored -> new ByteArrayResource(stored.content()) {
+                    @Override
+                    public String getFilename() {
+                        return stored.filename();
+                    }
+                })
+                .orElseThrow(() -> new BusinessException(
+                        HttpStatus.NOT_FOUND,
+                        "PHOTO_NOT_FOUND",
+                        "A foto não está disponível."
+                ));
     }
 
     public void delete(String filename) {
-        if (filename == null) {
-            return;
-        }
-        try {
-            Files.deleteIfExists(safeResolve(filename));
-        } catch (IOException exception) {
-            throw new BusinessException(
-                    HttpStatus.INTERNAL_SERVER_ERROR,
-                    "PHOTO_DELETE_ERROR",
-                    "Não foi possível remover a foto."
-            );
+        if (filename != null) {
+            storedPhotoRepository.deleteByFilename(filename);
         }
     }
 
@@ -105,14 +94,6 @@ public class PhotoStorageService {
         } catch (IOException exception) {
             throw invalidPhoto("Não foi possível ler a imagem.");
         }
-    }
-
-    private Path safeResolve(String filename) throws IOException {
-        Path resolved = root.resolve(filename).normalize();
-        if (!resolved.startsWith(root)) {
-            throw new IOException("Caminho inválido");
-        }
-        return resolved;
     }
 
     private BusinessException invalidPhoto(String message) {
