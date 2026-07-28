@@ -15,8 +15,9 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Locale;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.TimeUnit;
 
 final class VercelStartupProxy {
     private static final Set<String> HOP_BY_HOP_HEADERS = Set.of(
@@ -42,7 +43,7 @@ final class VercelStartupProxy {
     static void start(String[] args) {
         int externalPort = Integer.parseInt(System.getenv().getOrDefault("PORT", "8080"));
         int internalPort = externalPort == 65_535 ? externalPort - 1 : externalPort + 1;
-        AtomicBoolean ready = new AtomicBoolean(false);
+        CountDownLatch ready = new CountDownLatch(1);
 
         System.setProperty("server.port", Integer.toString(internalPort));
 
@@ -55,7 +56,7 @@ final class VercelStartupProxy {
 
         try {
             SpringApplication.run(DenguinhoApplication.class, args);
-            ready.set(true);
+            ready.countDown();
         } catch (RuntimeException exception) {
             proxy.stop(0);
             throw exception;
@@ -65,7 +66,7 @@ final class VercelStartupProxy {
     private static HttpServer createProxy(
             int externalPort,
             int internalPort,
-            AtomicBoolean ready,
+            CountDownLatch ready,
             HttpClient client
     ) {
         try {
@@ -88,16 +89,17 @@ final class VercelStartupProxy {
     private static void forward(
             HttpExchange exchange,
             int internalPort,
-            AtomicBoolean ready,
-        HttpClient client
+            CountDownLatch ready,
+            HttpClient client
     ) throws IOException {
-        if (!ready.get()) {
-            byte[] body = "API iniciando".getBytes(StandardCharsets.UTF_8);
-            exchange.getResponseHeaders().set("Content-Type", "text/plain; charset=utf-8");
-            exchange.getResponseHeaders().set("Retry-After", "1");
-            exchange.sendResponseHeaders(503, body.length);
-            exchange.getResponseBody().write(body);
-            exchange.close();
+        try {
+            if (!ready.await(90, TimeUnit.SECONDS)) {
+                sendStartingResponse(exchange);
+                return;
+            }
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            sendStartingResponse(exchange);
             return;
         }
 
@@ -137,6 +139,15 @@ final class VercelStartupProxy {
         } finally {
             exchange.close();
         }
+    }
+
+    private static void sendStartingResponse(HttpExchange exchange) throws IOException {
+        byte[] body = "API iniciando".getBytes(StandardCharsets.UTF_8);
+        exchange.getResponseHeaders().set("Content-Type", "text/plain; charset=utf-8");
+        exchange.getResponseHeaders().set("Retry-After", "1");
+        exchange.sendResponseHeaders(503, body.length);
+        exchange.getResponseBody().write(body);
+        exchange.close();
     }
 
     private static void copyHeaders(Headers headers, HttpRequest.Builder request) {
