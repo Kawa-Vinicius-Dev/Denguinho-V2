@@ -1,30 +1,108 @@
 # Denguinho V2
 
-Aplicação privada para duas pessoas cuidarem dos próprios objetivos com apoio,
-leveza e competição saudável.
+O **Denguinho V2** é uma aplicação privada para casais acompanharem objetivos, cumprirem desafios e manterem uma competição leve e saudável.
 
-## Estrutura
+O projeto está sendo reconstruído com foco em **Java e Spring Boot**, transformando a primeira versão em uma aplicação mais completa e organizada para portfólio.
 
-- `backend`: Java 21, Spring Boot, Security/JWT, JPA, Flyway e PostgreSQL.
-- `frontend`: React com Vite, responsivo e mobile-first.
-- `docs`: diagnóstico, arquitetura e roadmap do produto.
+> **Status:** em desenvolvimento. As funcionalidades abaixo representam o escopo planejado e serão implementadas por etapas.
 
-## Rodando localmente
+## Objetivo
 
-1. Copie `.env.example` para `.env` e troque todos os valores.
-2. Inicie PostgreSQL e backend com `docker compose up --build`.
-3. Em outro terminal, execute `cd frontend`, `npm install` e `npm run dev`.
-4. Abra `http://localhost:5173`.
+Criar um ambiente exclusivo para duas pessoas que una relacionamento, organização e motivação. Cada pessoa poderá acompanhar seu próprio desempenho, participar de missões em dupla e visualizar a evolução do casal ao longo do tempo.
 
-O Swagger fica em `http://localhost:8080/swagger-ui.html`.
+O Denguinho não terá desafios diários. A dinâmica será baseada apenas em:
 
-Sem Docker, o frontend pode ser apresentado isoladamente com
-`npm run dev:demo`. Esse modo usa dados fictícios locais e nunca deve ser usado
-como ambiente de produção.
+- desafios semanais;
+- desafios mensais;
+- missões individuais;
+- disputas competitivas;
+- missões realizadas em dupla.
 
-## Segurança
+## MVP planejado
 
-Segredos, tokens e fotos pessoais não são versionados. A foto do casal usada no
-desenvolvimento fica em `storage/private/couple-photos` e só é entregue pela API
-autenticada. A imagem pública é um fallback genérico.
+A primeira versão funcional terá:
 
+- cadastro e autenticação do casal;
+- criação de desafios semanais e mensais;
+- definição de participante, categoria, prazo e pontuação;
+- registro da conclusão dos desafios;
+- placar entre os participantes;
+- acompanhamento do progresso individual e conjunto;
+- histórico dos desafios;
+- definição do vencedor da semana e do mês;
+- dashboard com o card **Nossa Jornada**.
+
+## Categorias dos desafios
+
+- Estudos
+- Trabalho
+- Projetos
+- Saúde
+- Organização
+- Finanças
+- Relacionamento
+- Diversão
+- Outros
+
+## Funcionalidades futuras
+
+Após a conclusão do MVP, o projeto poderá receber:
+
+- **Modo Foco Juntos:** sessões compartilhadas de estudo, trabalho ou organização;
+- **Preciso de um Dengo:** pedido rápido de atenção ou apoio;
+- **Modo Retomada:** espaço para o casal se reorganizar após um período difícil;
+- mural privado com mensagens e registros;
+- recompensas definidas pelo casal;
+- surpresas semanais e mensais;
+- retrospectiva mensal da evolução do casal.
+
+Esses recursos fazem parte do planejamento e ainda não devem ser considerados implementados.
+
+## Tecnologias planejadas
+
+### Backend
+
+- Java 21
+- Spring Boot
+- Spring Data JPA
+- Spring Security
+- JWT
+- PostgreSQL
+- Flyway
+- Maven
+- Swagger / OpenAPI
+- JUnit e Mockito
+
+### Frontend
+
+- React
+- Vite
+- interface responsiva e mobile-first
+- integração com API REST
+
+## Roadmap
+
+- [ ] Definir regras do domínio e estrutura do banco de dados
+- [ ] Criar o backend com Java e Spring Boot
+- [ ] Implementar autenticação e vínculo do casal
+- [ ] Implementar desafios semanais e mensais
+- [ ] Criar pontuação, placar e histórico
+- [ ] Desenvolver o dashboard principal
+- [ ] Integrar frontend e API
+- [ ] Adicionar testes automatizados
+- [ ] Documentar a API
+- [ ] Preparar demonstração do projeto
+
+## Como executar
+
+O projeto ainda está em fase inicial. As instruções de instalação e execução serão adicionadas quando o primeiro MVP estiver disponível.
+
+## Versão anterior
+
+A primeira versão do Denguinho permanece disponível para registrar a evolução do projeto:
+
+[Denguinho - versão original](https://github.com/Kawa-Vinicius-Dev/denguinho)
+
+## Autor
+
+Desenvolvido por [Kawã Vinicius](https://github.com/Kawa-Vinicius-Dev).
