@@ -12,4 +12,4 @@ WORKDIR /app
 COPY --from=build /workspace/target/denguinho-api-*.jar app.jar
 USER denguinho
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "--add-modules", "jdk.httpserver", "-jar", "app.jar"]
