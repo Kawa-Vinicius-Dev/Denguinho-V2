@@ -36,7 +36,7 @@ final class VercelStartupProxy {
     }
 
     static boolean isVercelContainer() {
-        return "1".equals(System.getenv("VERCEL"));
+        return "1".equals(System.getenv("DENGUINHO_VERCEL_CONTAINER"));
     }
 
     static void start(String[] args) {

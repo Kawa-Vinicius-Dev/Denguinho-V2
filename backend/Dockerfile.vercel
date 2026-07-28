@@ -10,6 +10,7 @@ FROM eclipse-temurin:21-jre-alpine
 RUN addgroup -S denguinho && adduser -S denguinho -G denguinho
 WORKDIR /app
 COPY --from=build /workspace/target/denguinho-api-*.jar app.jar
+ENV DENGUINHO_VERCEL_CONTAINER=1
 USER denguinho
 EXPOSE 8080
 ENTRYPOINT ["java", "--add-modules", "jdk.httpserver", "-jar", "app.jar"]
