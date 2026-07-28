@@ -1,53 +1,30 @@
-# Denguinho V2 💙
+# Denguinho V2
 
-Uma aplicação web privada para casais, criada para transformar metas e momentos a dois em uma competição saudável, divertida e organizada.
+Aplicação privada para duas pessoas cuidarem dos próprios objetivos com apoio,
+leveza e competição saudável.
 
-O Denguinho V2 será uma reconstrução do projeto original, agora com uma arquitetura mais profissional e foco em desafios semanais e mensais — sem desafios diários.
+## Estrutura
 
-## Objetivo
+- `backend`: Java 21, Spring Boot, Security/JWT, JPA, Flyway e PostgreSQL.
+- `frontend`: React com Vite, responsivo e mobile-first.
+- `docs`: diagnóstico, arquitetura e roadmap do produto.
 
-Criar um espaço exclusivo para o casal acompanhar desafios, pontuações, recompensas e a evolução da relação de forma leve e gamificada.
+## Rodando localmente
 
-## Funcionalidades planejadas
+1. Copie `.env.example` para `.env` e troque todos os valores.
+2. Inicie PostgreSQL e backend com `docker compose up --build`.
+3. Em outro terminal, execute `cd frontend`, `npm install` e `npm run dev`.
+4. Abra `http://localhost:5173`.
 
-- Autenticação segura dos usuários
-- Desafios semanais e mensais
-- Sistema de pontos e ranking do casal
-- Histórico de desafios e resultados
-- Destaque do vencedor de cada período
-- Recompensas definidas pelo casal
-- Mural do casal
-- Pedidos de apoio e carinho
-- Modo foco
-- Revisão mensal da jornada
+O Swagger fica em `http://localhost:8080/swagger-ui.html`.
 
-## Tecnologias
+Sem Docker, o frontend pode ser apresentado isoladamente com
+`npm run dev:demo`. Esse modo usa dados fictícios locais e nunca deve ser usado
+como ambiente de produção.
 
-### Back-end
+## Segurança
 
-- Java 21
-- Spring Boot
-- Spring Security e JWT
-- Spring Data JPA
-- PostgreSQL
-- Flyway
-- Maven
-- Swagger / OpenAPI
-- JUnit e Mockito
+Segredos, tokens e fotos pessoais não são versionados. A foto do casal usada no
+desenvolvimento fica em `storage/private/couple-photos` e só é entregue pela API
+autenticada. A imagem pública é um fallback genérico.
 
-### Front-end
-
-- React
-- Vite
-
-### Infraestrutura
-
-- Docker Compose
-
-## Status
-
-🚧 Projeto em desenvolvimento.
-
-## Autor
-
-Desenvolvido por [Kawã Vinicius](https://github.com/Kawa-Vinicius-Dev).

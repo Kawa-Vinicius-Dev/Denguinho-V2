@@ -1,0 +1,32 @@
+# Environment and secrets
+.env
+.env.local
+!.env.example
+
+# Java / Maven
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+*.log
+
+# Node / Vite
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# IDE / OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Private user uploads and local couple photo
+storage/private/
+frontend/public/private/
+frontend/public/couple-photo-local.*
+
+# Test artifacts
+playwright-report/
+test-results/
+artifacts/
+frontend/.playwright-python/
