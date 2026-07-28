@@ -6,7 +6,7 @@ RUN chmod +x mvnw && ./mvnw -q -DskipTests dependency:go-offline
 COPY src src
 RUN ./mvnw -q -DskipTests package
 
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:21-jdk-alpine
 RUN addgroup -S denguinho && adduser -S denguinho -G denguinho
 WORKDIR /app
 COPY --from=build /workspace/target/denguinho-api-*.jar app.jar
