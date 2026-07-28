@@ -1,5 +1,16 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
+const API_HEALTH_URL = API_URL.replace(/\/api\/?$/, '/actuator/health')
 export const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true'
+let apiWarmupStarted = false
+
+export function warmApi() {
+  if (isDemoMode || apiWarmupStarted) return
+  apiWarmupStarted = true
+
+  void fetch(API_HEALTH_URL, { cache: 'no-store' }).catch(() => {
+    // O aquecimento é oportunista; login e cadastro continuam tratando seus próprios erros.
+  })
+}
 
 const demoUser = {
   id: 'demo-user',
