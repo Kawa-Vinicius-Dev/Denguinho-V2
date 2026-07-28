@@ -49,6 +49,35 @@ const defaultPreferences = {
   vibration: true,
   reducedMotion: false,
 }
+const inviteCodePattern = /^[A-Z0-9]{6}$/
+
+function readInviteCodeFromUrl() {
+  const inviteCode = new URLSearchParams(window.location.search)
+    .get('invite')
+    ?.trim()
+    .toUpperCase()
+
+  return inviteCodePattern.test(inviteCode || '') ? inviteCode : ''
+}
+
+function createInviteLink(code) {
+  const inviteUrl = new URL('/', window.location.origin)
+  inviteUrl.searchParams.set('invite', code)
+  return inviteUrl.toString()
+}
+
+function createWhatsAppInviteLink(code) {
+  const message = [
+    'Entra comigo no Denguinho? 💛',
+    '',
+    'Criei nosso cantinho para compartilhar planos, conquistas e muito dengo.',
+    '',
+    `Use o código ${code} ou abra este link:`,
+    createInviteLink(code),
+  ].join('\n')
+
+  return `https://wa.me/?text=${encodeURIComponent(message)}`
+}
 
 function loadPreferences() {
   try {
@@ -229,16 +258,18 @@ function AuthScreen({ onAuthenticated }) {
 
 function PairingScreen({ user, onPaired, onLogout }) {
   const [invite, setInvite] = useState(null)
-  const [code, setCode] = useState('')
+  const [code, setCode] = useState(readInviteCodeFromUrl)
   const [busy, setBusy] = useState('')
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
+  const whatsappInviteLink = invite ? createWhatsAppInviteLink(invite.code) : ''
 
   const createInvite = async () => {
     setBusy('create')
     setError('')
     try {
       setInvite(await api.createInvite())
+      setCopied(false)
     } catch (requestError) {
       setError(requestError.message)
     } finally {
@@ -251,7 +282,11 @@ function PairingScreen({ user, onPaired, onLogout }) {
     setBusy('join')
     setError('')
     try {
-      onPaired(await api.joinCouple(code))
+      const couple = await api.joinCouple(code)
+      const currentUrl = new URL(window.location.href)
+      currentUrl.searchParams.delete('invite')
+      window.history.replaceState({}, '', currentUrl)
+      onPaired(couple)
     } catch (requestError) {
       setError(requestError.message)
     } finally {
@@ -290,13 +325,28 @@ function PairingScreen({ user, onPaired, onLogout }) {
           <article>
             <UserRoundPlus size={24} />
             <h2>Quero convidar</h2>
-            <p>Crie um código curto para enviar com carinho.</p>
+            <p>Crie um código curto e envie para o seu dengo.</p>
             {invite ? (
-              <div className="invite-code">
-                <span>{invite.code}</span>
-                <button onClick={copyInvite} aria-label="Copiar código">
-                  {copied ? <Check size={19} /> : <Copy size={19} />}
-                </button>
+              <div className="invite-share">
+                <div className="invite-code">
+                  <span>{invite.code}</span>
+                  <button onClick={copyInvite} aria-label="Copiar código">
+                    {copied ? <Check size={19} /> : <Copy size={19} />}
+                  </button>
+                </div>
+                <a
+                  className="button whatsapp"
+                  href={whatsappInviteLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="Enviar convite pelo WhatsApp"
+                >
+                  <MessageCircleHeart size={18} />
+                  Enviar pelo WhatsApp
+                </a>
+                <small className="invite-share-note">
+                  A mensagem já vai com o código e o link para entrar.
+                </small>
               </div>
             ) : (
               <button className="button primary" onClick={createInvite} disabled={busy}>
@@ -3123,7 +3173,10 @@ function Dashboard({
                   <Target size={25} />
                   <div>
                     <h3>O espaço para os desafios está pronto.</h3>
-                    <p>Semanais e mensais chegam na etapa 2 — nunca desafios diários.</p>
+                    <p>
+                      Escolham uma meta que faça sentido para vocês e comemorem cada
+                      avanço no caminho.
+                    </p>
                   </div>
                 </div>
               )}

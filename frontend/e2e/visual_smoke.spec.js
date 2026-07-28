@@ -37,6 +37,48 @@ function watchPageErrors(page) {
   return errors
 }
 
+test('cria e compartilha um convite carinhoso pelo WhatsApp', async ({ page }) => {
+  await page.goto('/?invite=ABC123')
+  await page.getByRole('button', { name: 'Criar agora' }).click()
+  await page.getByLabel('Como podemos chamar você?').fill('Kawã')
+  await page.getByLabel('E-mail').fill('usuario@exemplo.com')
+  await page.getByLabel('Senha').fill('senha-segura')
+  await page.getByRole('button', { name: 'Criar minha conta' }).click()
+
+  await expect(page.getByLabel('Código do convite')).toHaveValue('ABC123')
+  await expect(
+    page.getByText('Crie um código curto e envie para o seu dengo.'),
+  ).toBeVisible()
+
+  await page.getByRole('button', { name: 'Criar convite' }).click()
+  await expect(page.getByText('DENGO2', { exact: true })).toBeVisible()
+
+  const whatsappLink = page.getByRole('link', {
+    name: 'Enviar convite pelo WhatsApp',
+  })
+  const href = await whatsappLink.getAttribute('href')
+  const message = new URL(href).searchParams.get('text')
+
+  expect(message).toContain('Entra comigo no Denguinho? 💛')
+  expect(message).toContain('Use o código DENGO2')
+  expect(message).toContain('/?invite=DENGO2')
+
+  expect(await findSmallTouchTargets(page)).toEqual([])
+  await expectNoHorizontalOverflow(page)
+  await page.screenshot({
+    path: path.join(artifacts, 'invite-share-desktop.png'),
+    fullPage: true,
+  })
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  expect(await findSmallTouchTargets(page)).toEqual([])
+  await expectNoHorizontalOverflow(page)
+  await page.screenshot({
+    path: path.join(artifacts, 'invite-share-mobile.png'),
+    fullPage: true,
+  })
+})
+
 async function findSmallTouchTargets(page) {
   return page.evaluate(() =>
     Array.from(document.querySelectorAll('button, label.button'))
