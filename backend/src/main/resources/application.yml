@@ -5,6 +5,14 @@ spring:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/denguinho}
     username: ${DB_USERNAME:denguinho}
     password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: ${DB_POOL_MAX_SIZE:5}
+      minimum-idle: ${DB_POOL_MIN_IDLE:1}
+      connection-timeout: ${DB_CONNECTION_TIMEOUT_MS:30000}
+      idle-timeout: ${DB_IDLE_TIMEOUT_MS:600000}
+      max-lifetime: ${DB_MAX_LIFETIME_MS:1800000}
+      data-source-properties:
+        ApplicationName: denguinho-api
   jpa:
     open-in-view: false
     hibernate:
@@ -36,4 +44,3 @@ app:
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
-

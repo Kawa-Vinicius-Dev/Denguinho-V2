@@ -97,6 +97,30 @@ Esses recursos fazem parte do planejamento e ainda não devem ser considerados i
 
 O projeto ainda está em fase inicial. As instruções de instalação e execução serão adicionadas quando o primeiro MVP estiver disponível.
 
+## Supabase
+
+O banco de produção está no projeto `Denguinho V2`, na região de São Paulo.
+O backend usa o Session Pooler com SSL e mantém o esquema exclusivamente pelas
+migrations do Flyway. A Data API do Supabase permanece desativada porque o
+frontend conversa apenas com a API Spring Boot.
+
+Configure no ambiente do backend:
+
+- `DB_URL`: URL JDBC do Session Pooler indicada em `.env.example`.
+- `DB_USERNAME`: usuário do pool indicado em `.env.example`.
+- `DB_PASSWORD`: senha do banco, armazenada somente como segredo do ambiente.
+- `JWT_SECRET`: segredo aleatório com pelo menos 32 caracteres.
+- `APP_CORS_ALLOWED_ORIGINS`: domínio público do frontend.
+
+O pool do backend usa no máximo cinco conexões por padrão, adequado ao compute
+`nano`. Esse valor pode ser ajustado por `DB_POOL_MAX_SIZE`.
+
+## Segurança
+
+Segredos, tokens e fotos pessoais não são versionados. A foto do casal usada no
+desenvolvimento fica em `storage/private/couple-photos` e só é entregue pela API
+autenticada. A imagem pública é um fallback genérico.
+
 ## Versão anterior
 
 A primeira versão do Denguinho permanece disponível para registrar a evolução do projeto:
