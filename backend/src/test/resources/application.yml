@@ -12,6 +12,7 @@ spring:
     enabled: true
 
 app:
+  time-zone: America/Sao_Paulo
   jwt:
     secret: test-secret-that-is-longer-than-thirty-two-characters
     expiration: PT1H
