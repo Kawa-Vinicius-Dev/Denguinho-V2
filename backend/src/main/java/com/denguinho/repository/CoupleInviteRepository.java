@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 
 import jakarta.persistence.LockModeType;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -13,4 +14,6 @@ public interface CoupleInviteRepository extends JpaRepository<CoupleInvite, UUID
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<CoupleInvite> findByCodeIgnoreCase(String code);
+
+    List<CoupleInvite> findAllByCouple_IdAndUsedAtIsNull(UUID coupleId);
 }

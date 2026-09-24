@@ -72,5 +72,11 @@ public class CoupleInvite {
     public void markUsed(Instant when) {
         this.usedAt = when;
     }
+
+    public void expire(Instant when) {
+        if (expiresAt.isAfter(when)) {
+            this.expiresAt = when;
+        }
+    }
 }
 
