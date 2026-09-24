@@ -1,9 +1,11 @@
 package com.denguinho.exception;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.time.Instant;
@@ -47,5 +49,26 @@ public class GlobalExceptionHandler {
                 Map.of()
         ));
     }
-}
 
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    ResponseEntity<ApiError> handleUnreadableBody(HttpMessageNotReadableException exception) {
+        return ResponseEntity.badRequest().body(new ApiError(
+                Instant.now(),
+                400,
+                "INVALID_REQUEST_BODY",
+                "Não foi possível ler os dados enviados.",
+                Map.of()
+        ));
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    ResponseEntity<ApiError> handleTypeMismatch(MethodArgumentTypeMismatchException exception) {
+        return ResponseEntity.badRequest().body(new ApiError(
+                Instant.now(),
+                400,
+                "INVALID_PARAMETER",
+                "O endereço informado não é válido.",
+                Map.of()
+        ));
+    }
+}

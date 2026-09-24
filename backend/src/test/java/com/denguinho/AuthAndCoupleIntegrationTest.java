@@ -70,6 +70,51 @@ class AuthAndCoupleIntegrationTest {
     }
 
     @Test
+    void inviterCanStillJoinThePartnersInvite() throws Exception {
+        String anaToken = register("Ana", "ana-invites@example.com");
+        String beto = register("Beto", "beto-invites@example.com");
+        String anaCode = createInvite(anaToken);
+        String betoCode = createInvite(beto);
+
+        mockMvc.perform(post("/api/couples/join")
+                        .header("Authorization", bearer(anaToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"code":"%s"}
+                                """.formatted(anaCode)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("OWN_INVITE"));
+
+        mockMvc.perform(post("/api/couples/join")
+                        .header("Authorization", bearer(anaToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"code":"%s"}
+                                """.formatted(betoCode)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.members.length()").value(2));
+
+        String caco = register("Caco", "caco-invites@example.com");
+        mockMvc.perform(post("/api/couples/join")
+                        .header("Authorization", bearer(caco))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"code":"%s"}
+                                """.formatted(anaCode)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("INVALID_INVITE"));
+
+        mockMvc.perform(post("/api/couples/join")
+                        .header("Authorization", bearer(anaToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"code":"%s"}
+                                """.formatted(createInvite(caco))))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("USER_ALREADY_PAIRED"));
+    }
+
+    @Test
     void rejectsDuplicateEmailAndInvalidCredentials() throws Exception {
         register("Nina", "nina@example.com");
 
@@ -107,6 +152,15 @@ class AuthAndCoupleIntegrationTest {
         mockMvc.perform(post("/api/couples/invites")
                         .header("Authorization", bearer(token)))
                 .andExpect(status().isOk());
+
+        mockMvc.perform(patch("/api/couples/me")
+                        .header("Authorization", bearer(token))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"currentObjective":"Planejar juntos","relationshipStartedOn":"2999-01-01"}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fields.relationshipStartedOn").exists());
 
         mockMvc.perform(patch("/api/couples/me")
                         .header("Authorization", bearer(token))
@@ -264,6 +318,16 @@ class AuthAndCoupleIntegrationTest {
                 .getContentAsString();
         JsonNode response = objectMapper.readTree(body);
         return response.get("token").asText();
+    }
+
+    private String createInvite(String token) throws Exception {
+        String body = mockMvc.perform(post("/api/couples/invites")
+                        .header("Authorization", bearer(token)))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        return objectMapper.readTree(body).get("code").asText();
     }
 
     private String bearer(String token) {

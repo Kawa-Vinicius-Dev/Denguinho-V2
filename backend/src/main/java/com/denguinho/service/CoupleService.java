@@ -78,7 +78,8 @@ public class CoupleService {
     @Transactional
     public CoupleResponse join(JoinCoupleRequest request) {
         User user = currentUserService.require();
-        if (user.getCouple() != null) {
+        Couple current = user.getCouple();
+        if (current != null && userRepository.countByCoupleId(current.getId()) >= 2) {
             throw new BusinessException(
                     HttpStatus.CONFLICT,
                     "USER_ALREADY_PAIRED",
@@ -88,6 +89,13 @@ public class CoupleService {
         CoupleInvite invite = inviteRepository
                 .findByCodeIgnoreCase(request.code().trim().toUpperCase(Locale.ROOT))
                 .orElseThrow(this::invalidInvite);
+        if (current != null && current.getId().equals(invite.getCouple().getId())) {
+            throw new BusinessException(
+                    HttpStatus.CONFLICT,
+                    "OWN_INVITE",
+                    "Esse convite é seu. Envie o código para o seu dengo entrar."
+            );
+        }
         Instant now = Instant.now();
         if (!invite.isAvailable(now)) {
             throw invalidInvite();
@@ -99,6 +107,12 @@ public class CoupleService {
                     "Esta dupla já está completa."
             );
         }
+        if (current != null) {
+            // Quem criou um convite e depois recebeu o do parceiro deixa a dupla vazia
+            // para trás; os convites dela deixam de valer para ninguém entrar sozinho.
+            inviteRepository.findAllByCouple_IdAndUsedAtIsNull(current.getId())
+                    .forEach(pending -> pending.expire(now));
+        }
         user.setCouple(invite.getCouple());
         userRepository.save(user);
         invite.markUsed(now);
@@ -107,12 +121,12 @@ public class CoupleService {
 
     @Transactional(readOnly = true)
     public CoupleResponse getCurrent() {
-        return toResponse(requireCouple(currentUserService.require()));
+        return toResponse(currentUserService.requireCouple());
     }
 
     @Transactional
     public CoupleResponse update(UpdateCoupleRequest request) {
-        Couple couple = requireCouple(currentUserService.require());
+        Couple couple = currentUserService.requireCouple();
         couple.setCurrentObjective(request.currentObjective().trim());
         couple.setRelationshipStartedOn(request.relationshipStartedOn());
         if (request.photoPositionX() != null) {
@@ -126,7 +140,7 @@ public class CoupleService {
 
     @Transactional
     public CoupleResponse updatePhoto(MultipartFile photo) {
-        Couple couple = requireCouple(currentUserService.require());
+        Couple couple = currentUserService.requireCouple();
         String previous = couple.getPhotoFilename();
         String stored = photoStorageService.store(couple.getId(), photo);
         couple.setPhotoFilename(stored);
@@ -137,7 +151,7 @@ public class CoupleService {
 
     @Transactional
     public CoupleResponse removePhoto() {
-        Couple couple = requireCouple(currentUserService.require());
+        Couple couple = currentUserService.requireCouple();
         String previous = couple.getPhotoFilename();
         couple.setPhotoFilename(null);
         CoupleResponse response = toResponse(coupleRepository.save(couple));
@@ -147,7 +161,7 @@ public class CoupleService {
 
     @Transactional(readOnly = true)
     public Resource getPhoto() {
-        Couple couple = requireCouple(currentUserService.require());
+        Couple couple = currentUserService.requireCouple();
         if (couple.getPhotoFilename() == null) {
             throw new BusinessException(
                     HttpStatus.NOT_FOUND,
@@ -156,17 +170,6 @@ public class CoupleService {
             );
         }
         return photoStorageService.load(couple.getPhotoFilename());
-    }
-
-    private Couple requireCouple(User user) {
-        if (user.getCouple() == null) {
-            throw new BusinessException(
-                    HttpStatus.CONFLICT,
-                    "COUPLE_REQUIRED",
-                    "Crie um convite ou entre na dupla para continuar."
-            );
-        }
-        return user.getCouple();
     }
 
     private CoupleResponse toResponse(Couple couple) {

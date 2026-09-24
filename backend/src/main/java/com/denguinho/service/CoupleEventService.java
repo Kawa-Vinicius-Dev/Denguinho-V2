@@ -30,7 +30,7 @@ public class CoupleEventService {
 
     @Transactional(readOnly = true)
     public List<CoupleEventResponse> list() {
-        Couple couple = requireCouple(currentUserService.require());
+        Couple couple = currentUserService.requireCouple();
         return eventRepository.findAllByCouple_IdOrderByEventDateAsc(couple.getId())
                 .stream()
                 .map(this::toResponse)
@@ -40,7 +40,7 @@ public class CoupleEventService {
     @Transactional
     public CoupleEventResponse create(CreateCoupleEventRequest request) {
         User user = currentUserService.require();
-        Couple couple = requireCouple(user);
+        Couple couple = currentUserService.requireCouple(user);
         CoupleEvent event = eventRepository.save(new CoupleEvent(
                 couple,
                 request.title().trim(),
@@ -53,7 +53,7 @@ public class CoupleEventService {
 
     @Transactional
     public CoupleEventResponse update(UUID eventId, CreateCoupleEventRequest request) {
-        Couple couple = requireCouple(currentUserService.require());
+        Couple couple = currentUserService.requireCouple();
         CoupleEvent event = requireEvent(eventId, couple);
         event.update(
                 request.title().trim(),
@@ -65,7 +65,7 @@ public class CoupleEventService {
 
     @Transactional
     public void delete(UUID eventId) {
-        Couple couple = requireCouple(currentUserService.require());
+        Couple couple = currentUserService.requireCouple();
         eventRepository.delete(requireEvent(eventId, couple));
     }
 
@@ -76,17 +76,6 @@ public class CoupleEventService {
                         "EVENT_NOT_FOUND",
                         "Este evento não foi encontrado na agenda de vocês."
                 ));
-    }
-
-    private Couple requireCouple(User user) {
-        if (user.getCouple() == null) {
-            throw new BusinessException(
-                    HttpStatus.CONFLICT,
-                    "COUPLE_REQUIRED",
-                    "Crie um convite ou entre na dupla para continuar."
-            );
-        }
-        return user.getCouple();
     }
 
     private CoupleEventResponse toResponse(CoupleEvent event) {

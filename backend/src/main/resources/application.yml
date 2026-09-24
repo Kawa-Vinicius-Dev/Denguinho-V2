@@ -34,6 +34,7 @@ server:
     include-message: never
 
 app:
+  time-zone: ${APP_TIME_ZONE:America/Sao_Paulo}
   jwt:
     secret: ${JWT_SECRET}
     expiration: PT8H
