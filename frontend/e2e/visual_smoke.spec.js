@@ -5,11 +5,18 @@ import { expect, test } from '@playwright/test'
 const artifacts = path.resolve(process.cwd(), '..', 'artifacts')
 fs.mkdirSync(artifacts, { recursive: true })
 
+// Segunda-feira, 27 de julho de 2026, 15h em São Paulo: última semana do mês.
+const fixedNow = new Date('2026-07-27T15:00:00-03:00')
+
+async function freezeCalendar(page) {
+  await page.clock.install({ time: fixedNow })
+}
+
 async function login(page) {
   await page.goto('/')
   await page.waitForLoadState('networkidle')
   await page.getByLabel('E-mail').fill('usuario@exemple.com')
-  await page.getByLabel('Senha').fill('senha-segura')
+  await page.getByLabel('Senha', { exact: true }).fill('senha-segura')
   await page.getByRole('button', { name: 'Entrar', exact: true }).click()
   await expect(
     page.getByRole('heading', {
@@ -17,6 +24,7 @@ async function login(page) {
     }),
   ).toBeVisible()
   await page.getByLabel('Nosso namoro começou em').fill('2024-06-26')
+  await expect(page.getByText('Isso dá 2 anos e 1 mês de história. 💛')).toBeVisible()
   await page.getByRole('button', { name: 'Guardar nosso dia' }).click()
   await expect(page.getByText('Nossa jornada', { exact: false })).toBeVisible()
 }
@@ -37,12 +45,34 @@ function watchPageErrors(page) {
   return errors
 }
 
+async function findSmallTouchTargets(page) {
+  return page.evaluate(() =>
+    Array.from(document.querySelectorAll('button, label.button, a.button'))
+      .map((control) => {
+        const rect = control.getBoundingClientRect()
+        return {
+          name:
+            control.getAttribute('aria-label') ||
+            control.innerText.trim().replace(/\s+/g, ' '),
+          width: Math.round(rect.width),
+          height: Math.round(rect.height),
+        }
+      })
+      .filter(
+        ({ width, height }) =>
+          width > 0 && height > 0 && (width < 44 || height < 44),
+      ),
+  )
+}
+
 test('cria e compartilha um convite carinhoso pelo WhatsApp', async ({ page }) => {
   await page.goto('/?invite=ABC123')
-  await page.getByRole('button', { name: 'Criar agora' }).click()
+  await expect(page.getByText('Você recebeu o convite')).toContainText('ABC123')
   await page.getByLabel('Como podemos chamar você?').fill('Kawã')
   await page.getByLabel('E-mail').fill('usuario@exemplo.com')
-  await page.getByLabel('Senha').fill('senha-segura')
+  await page.getByLabel('Senha', { exact: true }).fill('senha-segura')
+  await page.getByRole('button', { name: 'Mostrar o que foi digitado' }).click()
+  await expect(page.getByLabel('Senha', { exact: true })).toHaveAttribute('type', 'text')
   await page.getByRole('button', { name: 'Criar minha conta' }).click()
 
   await expect(page.getByLabel('Código do convite')).toHaveValue('ABC123')
@@ -52,6 +82,7 @@ test('cria e compartilha um convite carinhoso pelo WhatsApp', async ({ page }) =
 
   await page.getByRole('button', { name: 'Criar convite' }).click()
   await expect(page.getByText('DENGO2', { exact: true })).toBeVisible()
+  await expect(page.getByText('Esperando seu dengo entrar.', { exact: false })).toBeVisible()
 
   const whatsappLink = page.getByRole('link', {
     name: 'Enviar convite pelo WhatsApp',
@@ -77,36 +108,24 @@ test('cria e compartilha um convite carinhoso pelo WhatsApp', async ({ page }) =
     path: path.join(artifacts, 'invite-share-mobile.png'),
     fullPage: true,
   })
-})
 
-async function findSmallTouchTargets(page) {
-  return page.evaluate(() =>
-    Array.from(document.querySelectorAll('button, label.button'))
-      .map((control) => {
-        const rect = control.getBoundingClientRect()
-        return {
-          name:
-            control.getAttribute('aria-label') ||
-            control.innerText.trim().replace(/\s+/g, ' '),
-          width: Math.round(rect.width),
-          height: Math.round(rect.height),
-        }
-      })
-      .filter(
-        ({ width, height }) =>
-          width > 0 && height > 0 && (width < 44 || height < 44),
-      ),
-  )
-}
+  await page.getByRole('button', { name: 'Entrar na dupla' }).click()
+  await expect(
+    page.getByRole('heading', { name: 'Que dia você começou a namorar com teu dengo?' }),
+  ).toBeVisible()
+})
 
 test('dashboard e fluxos principais no desktop', async ({ page }) => {
   const errors = watchPageErrors(page)
+  await freezeCalendar(page)
   await page.setViewportSize({ width: 1440, height: 1000 })
   await login(page)
 
   await expect(page.getByText('Rilary & Kawã', { exact: true })).toBeVisible()
+  await expect(page.getByText('Segunda-feira, 27 de julho', { exact: true })).toBeVisible()
   await expect(page.getByText('Boa tarde, meu denguinho.')).toBeVisible()
   await expect(page.getByText('Vamos começar?')).toBeVisible()
+  await expect(page.getByText('Juntos há 2 anos e 1 mês')).toBeVisible()
   await expect(
     page.getByText('Planejar, executar e concluir — juntos.', { exact: true }),
   ).toBeVisible()
@@ -117,6 +136,8 @@ test('dashboard e fluxos principais no desktop', async ({ page }) => {
   ).toBeVisible()
   await expect(page.getByText('Semana 5 de 5', { exact: true })).toBeVisible()
   await expect(page.getByText('Agora no Denguinho', { exact: true })).toBeVisible()
+  await expect(page.getByText('Hoje vocês completam 25 meses 💛')).toHaveCount(0)
+  await expect(page.getByText('Faltam 30 dias. São 26 meses de história.')).toBeVisible()
   await expect(page.locator('.brand-mark-image')).toBeVisible()
   await expect(page.locator('.brand-mark-image')).toHaveAttribute(
     'src',
@@ -135,18 +156,23 @@ test('dashboard e fluxos principais no desktop', async ({ page }) => {
   ).toBeVisible()
   await page.getByRole('button', { name: 'Um cheiro' }).click()
   await page.getByRole('button', { name: 'Avisar meu dengo' }).click()
-  await expect(page.getByText('Rilary recebeu uma notificação.')).toBeVisible()
-  await page.getByRole('button', { name: 'Fechar painel' }).click()
-  await page.getByRole('button', { name: 'Notificações', exact: true }).click()
+  await expect(page.getByText('Pedido enviado para Rilary.', { exact: false })).toBeVisible()
+  await expect(page.getByText('Esperando Rilary responder')).toBeVisible()
+  await expect(page.getByText('Rilary respondeu', { exact: true })).toBeVisible({ timeout: 12_000 })
+  await expect(page.locator('#moment-title')).toHaveText('Tô indo')
+  await page.getByRole('button', { name: 'Notificações, 1 novas' }).click()
   const notifications = page.getByRole('dialog', { name: 'Notificações' })
-  await notifications.getByRole('button', { name: 'Tô indo', exact: true }).click()
   await expect(notifications.getByText('Rilary respondeu')).toBeVisible()
   await notifications.getByRole('button', { name: 'Coração' }).click()
-  await page.getByRole('button', { name: 'Fechar painel' }).click()
-  await expect(page.getByText('Rilary respondeu', { exact: true })).toBeVisible()
-  await expect(page.getByText('Tô indo', { exact: true })).toBeVisible()
+  await expect(notifications.getByRole('button', { name: 'Coração' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
+  await page.keyboard.press('Escape')
+  await expect(notifications).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Notificações', exact: true })).toBeVisible()
 
-  await page.getByRole('button', { name: 'Ver todos' }).click()
+  await page.getByRole('button', { name: 'Ver todos os desafios' }).click()
   const challenges = page.getByRole('dialog', { name: 'Todos os desafios' })
   await expect(challenges).toBeVisible()
   await expect(challenges.getByText('Kawã', { exact: true })).toBeVisible()
@@ -161,20 +187,40 @@ test('dashboard e fluxos principais no desktop', async ({ page }) => {
   await challenges.getByRole('tab', { name: 'Em casal' }).click()
   await challenges.getByRole('button', { name: 'Criar primeiro desafio' }).click()
   await challenges.getByLabel('Nome do desafio').fill('Planejar um encontro')
-  await challenges.getByLabel('Qual é a meta?').fill('3')
+  await challenges.getByLabel('Categoria').selectOption('RELATIONSHIP')
+  await challenges.getByLabel('Qual é a meta?').fill('2')
+  await expect(challenges.getByText('Cada avanço vale 40 pontos no placar do casal.')).toBeVisible()
   await challenges.getByRole('button', { name: 'Adicionar desafio' }).click()
   await expect(
     challenges.getByRole('heading', { name: 'Planejar um encontro' }),
   ).toBeVisible()
+  await challenges
+    .getByRole('button', { name: 'Registrar avanço em Planejar um encontro' })
+    .click()
+  await expect(page.getByText('Avanço registrado: +40 pontos.')).toBeVisible()
+  await expect(challenges.getByText('40 pts', { exact: true })).toBeVisible()
   await challenges.getByRole('button', { name: 'Abrir Planejar um encontro' }).click()
   const createdChallengeDetails = page.getByRole('dialog', {
     name: 'Planejar um encontro',
   })
+  await expect(createdChallengeDetails.getByText('50% concluído')).toBeVisible()
+  await expect(
+    createdChallengeDetails.getByText('O histórico aparece quando esta semana terminar.'),
+  ).toBeVisible()
+  await createdChallengeDetails.getByRole('button', { name: 'Registrar avanço' }).click()
+  await expect(page.getByText('Meta batida! +40 pontos 🎉')).toBeVisible()
+  await expect(createdChallengeDetails.getByText('Meta batida nesta semana!')).toBeVisible()
+  await expect(
+    createdChallengeDetails.getByRole('button', { name: 'Meta batida nesta semana' }),
+  ).toBeDisabled()
+  await page.getByRole('button', { name: 'Desfazer', exact: true }).click()
+  await expect(page.getByText('Avanço desfeito.')).toBeVisible()
+  await expect(createdChallengeDetails.getByText('50% concluído')).toBeVisible()
   await createdChallengeDetails.getByRole('button', { name: 'Editar desafio' }).click()
   await createdChallengeDetails
     .getByLabel('Nome do desafio')
     .fill('Planejar encontro surpresa')
-  await createdChallengeDetails.getByLabel('Categoria').selectOption('Lazer')
+  await createdChallengeDetails.getByLabel('Categoria').selectOption('LEISURE')
   await createdChallengeDetails.getByLabel('Meta total').fill('5')
   await page.screenshot({
     path: path.join(artifacts, 'challenge-edit-desktop.png'),
@@ -185,6 +231,7 @@ test('dashboard e fluxos principais no desktop', async ({ page }) => {
     name: 'Planejar encontro surpresa',
   })
   await expect(editedChallengeDetails).toBeVisible()
+  await expect(editedChallengeDetails.getByText('20% concluído')).toBeVisible()
   await editedChallengeDetails
     .getByRole('button', { name: 'Excluir Planejar encontro surpresa' })
     .click()
@@ -201,6 +248,7 @@ test('dashboard e fluxos principais no desktop', async ({ page }) => {
   await expect(
     page.getByRole('heading', { name: 'Nenhum desafio por aqui ainda.' }),
   ).toBeVisible()
+  await expect(page.getByText('40 pts · Rilary & Kawã')).toBeVisible()
 
   await page.getByRole('button', { name: 'Abrir configurações' }).click()
   const settings = page.getByRole('dialog', { name: 'Configurações' })
@@ -265,9 +313,11 @@ test('navegação, toque e conta no celular', async ({ browser }) => {
   })
   const page = await context.newPage()
   const errors = watchPageErrors(page)
+  await freezeCalendar(page)
   await login(page)
 
   await expect(page.getByText('Rilary & Kawã', { exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Notificações', exact: true })).toBeVisible()
   await expectNoHorizontalOverflow(page)
 
   expect(await findSmallTouchTargets(page)).toEqual([])
@@ -282,19 +332,29 @@ test('navegação, toque e conta no celular', async ({ browser }) => {
   await expect(
     page.getByText('Todo dia 26, mais um mês da história de vocês.'),
   ).toBeVisible()
+  await expect(page.getByText('Próximo: 26 ago, em 30 dias · 26 meses')).toBeVisible()
   await expect(page.getByText('0 eventos', { exact: true })).toBeVisible()
   await expect(
     page.getByText('A agenda está livre. Qual vai ser o primeiro rolê?'),
   ).toBeVisible()
   await page.getByRole('button', { name: 'Novo evento' }).click()
   await page.getByLabel('O que vocês vão fazer?').fill('Dia de praia')
+  await expect(page.getByLabel('Quando?')).toHaveValue('2026-07-28')
   await page.getByLabel('Vai se repetir?').selectOption('NONE')
   await page.getByRole('button', { name: 'Adicionar à agenda' }).click()
+  await expect(page.getByText('Não repete · amanhã')).toBeVisible()
   await page.getByRole('button', { name: 'Editar Dia de praia' }).click()
   await page.getByLabel('O que vocês vão fazer?').fill('Dia de praia e pôr do sol')
   await page.getByLabel('Vai se repetir?').selectOption('MONTHLY')
   await page.getByRole('button', { name: 'Salvar evento' }).click()
   await expect(page.getByRole('heading', { name: 'Dia de praia e pôr do sol' })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Novo evento' }).click()
+  await page.getByLabel('O que vocês vão fazer?').fill('Show que passou')
+  await page.getByLabel('Quando?').fill('2026-07-10')
+  await page.getByRole('button', { name: 'Adicionar à agenda' }).click()
+  await expect(page.getByText('1 evento', { exact: true })).toBeVisible()
+  await expect(page.getByText('Momentos que já passaram (1)')).toBeVisible()
 
   await page.getByRole('button', { name: 'Excluir Dia de praia e pôr do sol' }).click()
   const deleteConfirmation = page.getByRole('alert')
@@ -339,6 +399,8 @@ test('navegação, toque e conta no celular', async ({ browser }) => {
   })
   await mobileChallengeDetails.getByRole('button', { name: 'Cancelar' }).click()
   await page.getByRole('button', { name: 'Fechar painel' }).click()
+  await page.getByRole('button', { name: 'Registrar avanço em Ler juntos' }).click()
+  await expect(page.getByText('Avanço registrado: +25 pontos.')).toBeVisible()
 
   await page.getByRole('button', { name: 'Mais', exact: true }).click()
   await page.getByRole('button', { name: /Minha conta/ }).click()
@@ -347,9 +409,9 @@ test('navegação, toque e conta no celular', async ({ browser }) => {
   await expect(account.getByLabel('E-mail', { exact: false })).toHaveValue(
     'usuario@exemple.com',
   )
-  await expect(account.getByText('Receber por e-mail')).toHaveCount(0)
+  await expect(account.getByLabel('Senha atual')).toHaveCount(0)
   const passwordButton = account.getByRole('button', {
-    name: 'Esqueci minha senha',
+    name: 'Alterar senha',
     exact: true,
   })
   await expect(passwordButton).toBeVisible()
@@ -359,39 +421,46 @@ test('navegação, toque e conta no celular', async ({ browser }) => {
     fullPage: true,
   })
   await passwordButton.click()
-  await expect(account.getByText('Receber por e-mail')).toBeVisible()
-  await expect(account.getByText('usuario@exemple.com', { exact: false })).toBeVisible()
-  await account.getByRole('button', { name: 'Enviar instruções' }).click()
-  await expect(
-    account.getByText('Instruções enviadas para usuario@exemple.com.'),
-  ).toBeVisible()
+  await account.getByLabel('Senha atual', { exact: true }).fill('senha-segura')
+  await account.getByLabel('Nova senha', { exact: true }).fill('senha-nova-123')
+  await account.getByLabel('Confirme a nova senha', { exact: true }).fill('senha-nova-124')
+  await account.getByRole('button', { name: 'Salvar nova senha' }).click()
+  await expect(account.getByText('A confirmação não é igual à nova senha.')).toBeVisible()
+  await account.getByLabel('Confirme a nova senha', { exact: true }).fill('senha-nova-123')
+  await account.getByRole('button', { name: 'Salvar nova senha' }).click()
+  await expect(page.getByText('Senha alterada.', { exact: false })).toBeVisible()
+  await expect(account.getByLabel('Senha atual')).toHaveCount(0)
   await expect(account.locator('input[type="file"]')).toHaveCount(1)
   expect(await findSmallTouchTargets(page)).toEqual([])
   await page.screenshot({
     path: path.join(artifacts, 'account-password-expanded-mobile.png'),
     fullPage: true,
   })
-  await account.getByRole('button', { name: 'Cancelar', exact: true }).click()
-  await expect(account.getByText('Receber por e-mail')).toHaveCount(0)
   await page.getByRole('button', { name: 'Fechar minha conta' }).click()
 
   await page.getByRole('button', { name: 'Foco', exact: true }).click()
-  const focusPanel = page.getByRole('dialog', { name: 'Preparar foco juntos' })
+  const focusPanel = page.getByRole('dialog', { name: 'Foco juntos' })
   await focusPanel.getByLabel('No que vocês vão focar?').fill('Planejar a semana')
   await focusPanel.getByRole('button', { name: 'Começar juntos' }).click()
-  await expect(focusPanel.getByText('Rilary está nessa com você')).toBeVisible()
+  await expect(focusPanel.getByRole('timer')).toContainText('25:00')
   await focusPanel.getByRole('button', { name: 'Pausar' }).click()
   await expect(focusPanel.getByRole('button', { name: 'Continuar' })).toBeVisible()
   await focusPanel.getByRole('button', { name: 'Continuar' }).click()
-  await focusPanel.getByRole('button', { name: 'Concluir' }).click()
+  await page.clock.fastForward('25:00')
   await expect(focusPanel.getByText('+25 pontos para o casal')).toBeVisible()
   await focusPanel.getByRole('button', { name: 'Focado' }).click()
+  await expect(focusPanel.getByRole('button', { name: 'Focado' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
   await page.getByRole('button', { name: 'Fechar painel' }).click()
 
   await page.getByRole('button', { name: 'Mais', exact: true }).click()
   await page.getByRole('button', { name: /Retrospectiva/ }).click()
   await expect(page.getByRole('heading', { name: 'Retrospectiva' })).toBeVisible()
   await expect(page.getByText('Resumo da semana')).toBeVisible()
+  await expect(page.getByText('Você puxou a semana com 1 avanço.')).toBeVisible()
+  await expect(page.getByText('25 min de foco')).toBeVisible()
   await page.getByRole('button', { name: 'Fechar painel' }).click()
 
   await page.getByRole('button', { name: 'Mais', exact: true }).click()
@@ -429,4 +498,16 @@ test('navegação, toque e conta no celular', async ({ browser }) => {
 
   expect(errors).toEqual([])
   await context.close()
+})
+
+test('sessão expirada volta para a entrada com aviso', async ({ page }) => {
+  await page.goto('/')
+  await page.evaluate(() => localStorage.setItem('denguinho-token', 'token-antigo'))
+  await page.reload()
+  await expect(
+    page.getByRole('heading', { name: 'Que dia você começou a namorar com teu dengo?' }),
+  ).toBeVisible()
+  await page.evaluate(() => window.dispatchEvent(new Event('denguinho:session-expired')))
+  await expect(page.getByRole('heading', { name: 'Que bom ter você de volta.' })).toBeVisible()
+  await expect(page.getByText('Sua sessão expirou. Entre de novo para continuar.')).toBeVisible()
 })

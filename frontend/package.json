@@ -8,6 +8,7 @@
     "dev:demo": "vite --mode demo",
     "build": "vite build",
     "lint": "eslint .",
+    "test": "node --test \"src/**/*.test.js\"",
     "preview": "vite preview",
     "test:e2e": "playwright test"
   },

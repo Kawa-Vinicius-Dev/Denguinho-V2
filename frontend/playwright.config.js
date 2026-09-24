@@ -13,6 +13,8 @@ export default defineConfig({
     baseURL: 'http://127.0.0.1:5173',
     channel: process.platform === 'win32' ? 'msedge' : undefined,
     headless: true,
+    locale: 'pt-BR',
+    timezoneId: 'America/Sao_Paulo',
     trace: 'retain-on-failure',
   },
   webServer: {
