@@ -31,6 +31,12 @@ describe('summarizeDengos', () => {
   it('pedidos pendentes continuam contando até serem respondidos', () => {
     assert.equal(summarizeDengos(dengos, 'me', '2026-09-24T12:00:00Z').unseenCount, 1)
   })
+
+  it('para de esperar resposta de um pedido antigo', () => {
+    const mine = [{ id: 'm', kind: 'REQUEST', senderId: 'me', message: 'Oi', createdAt: '2026-09-24T08:00:00Z' }]
+    assert.equal(summarizeDengos(mine, 'me', null, new Date('2026-09-24T12:00:00Z')).waitingPartner.id, 'm')
+    assert.equal(summarizeDengos(mine, 'me', null, new Date('2026-09-25T09:00:00Z')).waitingPartner, undefined)
+  })
 })
 
 describe('pickMoment', () => {

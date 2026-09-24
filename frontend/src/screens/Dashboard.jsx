@@ -78,7 +78,7 @@ export function Dashboard({
   const partner = couple.members.find((member) => member.id !== user.id)
   const partnerName = firstName(partner?.name) || 'Seu dengo'
   const userFirstName = firstName(user.name)
-  const dengoSummary = summarizeDengos(dengos, user.id, lastSeenAt)
+  const dengoSummary = summarizeDengos(dengos, user.id, lastSeenAt, now)
   const moment = pickMoment({
     dengoSummary,
     focus,
