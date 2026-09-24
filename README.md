@@ -157,6 +157,12 @@ Configure no ambiente do backend:
 O pool do backend usa no máximo cinco conexões por padrão, adequado ao compute
 `nano`. Esse valor pode ser ajustado por `DB_POOL_MAX_SIZE`.
 
+Projetos gratuitos do Supabase são pausados depois de alguns dias sem uso, e aí
+a API não consegue iniciar (a Vercel responde `FUNCTION_INVOCATION_FAILED`).
+Para evitar isso, `backend/vercel.json` agenda um cron diário (12h UTC) que chama
+`/actuator/health`, e essa verificação consulta o banco. Se o projeto já estiver
+pausado, reative-o no painel do Supabase (*Restore project*).
+
 ## Segurança
 
 Segredos, tokens e fotos pessoais não são versionados. As fotos privadas ficam
