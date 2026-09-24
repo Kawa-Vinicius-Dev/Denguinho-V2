@@ -157,6 +157,15 @@ class AuthAndCoupleIntegrationTest {
                         .header("Authorization", bearer(token))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
+                                {"currentObjective":"Planejar juntos","relationshipStartedOn":"2999-01-01"}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fields.relationshipStartedOn").exists());
+
+        mockMvc.perform(patch("/api/couples/me")
+                        .header("Authorization", bearer(token))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
                                 {
                                   "currentObjective":"Planejar e viver bons momentos juntos",
                                   "relationshipStartedOn":"2024-06-26",
