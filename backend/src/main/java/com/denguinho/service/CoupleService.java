@@ -107,12 +107,12 @@ public class CoupleService {
 
     @Transactional(readOnly = true)
     public CoupleResponse getCurrent() {
-        return toResponse(requireCouple(currentUserService.require()));
+        return toResponse(currentUserService.requireCouple());
     }
 
     @Transactional
     public CoupleResponse update(UpdateCoupleRequest request) {
-        Couple couple = requireCouple(currentUserService.require());
+        Couple couple = currentUserService.requireCouple();
         couple.setCurrentObjective(request.currentObjective().trim());
         couple.setRelationshipStartedOn(request.relationshipStartedOn());
         if (request.photoPositionX() != null) {
@@ -126,7 +126,7 @@ public class CoupleService {
 
     @Transactional
     public CoupleResponse updatePhoto(MultipartFile photo) {
-        Couple couple = requireCouple(currentUserService.require());
+        Couple couple = currentUserService.requireCouple();
         String previous = couple.getPhotoFilename();
         String stored = photoStorageService.store(couple.getId(), photo);
         couple.setPhotoFilename(stored);
@@ -137,7 +137,7 @@ public class CoupleService {
 
     @Transactional
     public CoupleResponse removePhoto() {
-        Couple couple = requireCouple(currentUserService.require());
+        Couple couple = currentUserService.requireCouple();
         String previous = couple.getPhotoFilename();
         couple.setPhotoFilename(null);
         CoupleResponse response = toResponse(coupleRepository.save(couple));
@@ -147,7 +147,7 @@ public class CoupleService {
 
     @Transactional(readOnly = true)
     public Resource getPhoto() {
-        Couple couple = requireCouple(currentUserService.require());
+        Couple couple = currentUserService.requireCouple();
         if (couple.getPhotoFilename() == null) {
             throw new BusinessException(
                     HttpStatus.NOT_FOUND,
@@ -156,17 +156,6 @@ public class CoupleService {
             );
         }
         return photoStorageService.load(couple.getPhotoFilename());
-    }
-
-    private Couple requireCouple(User user) {
-        if (user.getCouple() == null) {
-            throw new BusinessException(
-                    HttpStatus.CONFLICT,
-                    "COUPLE_REQUIRED",
-                    "Crie um convite ou entre na dupla para continuar."
-            );
-        }
-        return user.getCouple();
     }
 
     private CoupleResponse toResponse(Couple couple) {

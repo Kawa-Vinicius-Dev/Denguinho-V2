@@ -1,5 +1,6 @@
 package com.denguinho.security;
 
+import com.denguinho.entity.Couple;
 import com.denguinho.entity.User;
 import com.denguinho.exception.BusinessException;
 import com.denguinho.repository.UserRepository;
@@ -30,5 +31,19 @@ public class CurrentUserService {
                         "A sessão não pertence a um usuário ativo."
                 ));
     }
-}
 
+    public Couple requireCouple() {
+        return requireCouple(require());
+    }
+
+    public Couple requireCouple(User user) {
+        if (user.getCouple() == null) {
+            throw new BusinessException(
+                    HttpStatus.CONFLICT,
+                    "COUPLE_REQUIRED",
+                    "Crie um convite ou entre na dupla para continuar."
+            );
+        }
+        return user.getCouple();
+    }
+}
