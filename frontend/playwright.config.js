@@ -17,10 +17,19 @@ export default defineConfig({
     timezoneId: 'America/Sao_Paulo',
     trace: 'retain-on-failure',
   },
-  webServer: {
-    command: 'npm run dev:demo -- --host 127.0.0.1',
-    url: 'http://127.0.0.1:5173',
-    reuseExistingServer: true,
-    timeout: 30_000,
-  },
+  webServer: [
+    {
+      command: 'npm run dev:demo -- --host 127.0.0.1',
+      url: 'http://127.0.0.1:5173',
+      reuseExistingServer: true,
+      timeout: 30_000,
+    },
+    // Build de produção (modo demo) para testar service worker, offline e instalação.
+    {
+      command: 'npm run preview:e2e',
+      url: 'http://127.0.0.1:4317',
+      reuseExistingServer: false,
+      timeout: 120_000,
+    },
+  ],
 })

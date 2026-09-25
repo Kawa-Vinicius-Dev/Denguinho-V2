@@ -3,7 +3,7 @@ import { ProgressBar } from '../components/ProgressBar'
 import { formatDuration, relationshipDuration } from '../lib/dates'
 import { firstName } from '../lib/text'
 
-const fallbackJourneyImage = '/journey-fallback.png'
+const fallbackJourneyImage = '/journey-fallback.webp'
 
 export function JourneyCard({ couple, imageUrl, jointProgress, today, onSettings }) {
   const names = couple.members.map((member) => firstName(member.name)).join(' & ')

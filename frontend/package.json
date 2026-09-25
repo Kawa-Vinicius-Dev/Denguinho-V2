@@ -8,8 +8,9 @@
     "dev:demo": "vite --mode demo",
     "build": "vite build",
     "lint": "eslint .",
-    "test": "node --test \"src/**/*.test.js\"",
+    "test": "node --test \"src/**/*.test.js\" \"pwa/**/*.test.js\"",
     "preview": "vite preview",
+    "preview:e2e": "vite build --mode demo --outDir dist-e2e && vite preview --mode demo --outDir dist-e2e --host 127.0.0.1 --port 4317 --strictPort",
     "test:e2e": "playwright test"
   },
   "dependencies": {

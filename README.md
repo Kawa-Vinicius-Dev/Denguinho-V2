@@ -91,6 +91,7 @@ Esses recursos fazem parte do planejamento e ainda não devem ser considerados i
 - Vite
 - interface responsiva e mobile-first
 - integração com API REST
+- instalável como app no celular (PWA)
 
 ## Roadmap
 
@@ -104,6 +105,36 @@ Esses recursos fazem parte do planejamento e ainda não devem ser considerados i
 - [x] Adicionar testes automatizados
 - [x] Documentar a API
 - [x] Preparar demonstração do projeto
+
+## App no celular
+
+O Denguinho é um PWA: dá para instalar no iPhone e no Android direto do site,
+sem loja de aplicativos. Instalado, ele ganha ícone próprio, abre em tela cheia
+e continua abrindo mesmo sem internet (os dados do casal aparecem de novo quando
+a conexão volta).
+
+- **Android (Chrome, Edge, Samsung Internet):** o próprio app mostra o botão
+  **Instalar o app** no início. Também dá para usar o menu do navegador →
+  **Instalar app**.
+- **iPhone e iPad (Safari):** toque em **Compartilhar** → **Adicionar à Tela de
+  Início**. O app do iPhone não usa o login do Safari, então é preciso entrar
+  uma vez dentro dele.
+
+Os passos também ficam em **Mais → Instalar o app** e em **Configurações →
+Aplicativo**. Instale sempre pelo domínio oficial do site: a API só aceita o
+endereço configurado em `APP_CORS_ALLOWED_ORIGINS`.
+
+Por dentro:
+
+- `frontend/public/manifest.webmanifest` e os ícones em `frontend/public/icons`
+  (inclusive os adaptáveis do Android) descrevem o app;
+- `frontend/pwa/vitePlugin.js` gera o `sw.js` a cada build, com a lista de
+  arquivos do deploy e uma versão calculada a partir do conteúdo deles;
+- o service worker busca as páginas primeiro na rede (sempre a versão mais nova)
+  e usa o HTML guardado quando não há conexão; arquivos com hash no nome vêm do
+  cache. Chamadas para a API nunca passam por ele;
+- quando sai um deploy novo com o app aberto, aparece o aviso
+  **Chegou uma versão nova do Denguinho** com o botão **Atualizar**.
 
 ## Como executar
 
@@ -132,9 +163,9 @@ A documentação interativa da API fica em `http://localhost:8080/swagger-ui.htm
 
 ```bash
 cd backend && ./mvnw test        # unitários, controller e integração (H2)
-cd frontend && npm test          # regras de datas, desafios e notificações
+cd frontend && npm test          # regras de datas, desafios, notificações e PWA
 cd frontend && npm run lint
-cd frontend && npm run test:e2e  # Playwright no modo apresentação
+cd frontend && npm run test:e2e  # Playwright no modo apresentação e no build de produção
 ```
 
 ## Supabase

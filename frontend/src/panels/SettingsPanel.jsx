@@ -16,11 +16,12 @@ import {
 } from 'lucide-react'
 import { api } from '../api'
 import { Dialog } from '../components/Dialog'
+import { InstallAppSettings } from '../components/InstallApp'
 import { PreferenceToggle } from '../components/PreferenceToggle'
 import { startOfDay, toDateInputValue } from '../lib/dates'
 import { acceptedImageTypes, validateImage } from '../lib/images'
 
-const fallbackJourneyImage = '/journey-fallback.png'
+const fallbackJourneyImage = '/journey-fallback.webp'
 
 function clamp(value) {
   return Math.round(Math.min(100, Math.max(0, value)))
@@ -49,6 +50,7 @@ function CropAxis({ label, startLabel, endLabel, value, onChange }) {
 }
 
 export function SettingsPanel({
+  initialTab = 'journey',
   couple,
   onClose,
   onUpdated,
@@ -59,7 +61,7 @@ export function SettingsPanel({
   onPreferenceChange,
   notify,
 }) {
-  const [activeTab, setActiveTab] = useState('journey')
+  const [activeTab, setActiveTab] = useState(initialTab)
   const [objective, setObjective] = useState(couple.currentObjective)
   const [relationshipStartedOn, setRelationshipStartedOn] = useState(couple.relationshipStartedOn || '')
   const [photoPosition, setPhotoPosition] = useState({
@@ -323,6 +325,8 @@ export function SettingsPanel({
         </div>
       ) : (
         <div className="settings-tab-panel app-preferences" role="tabpanel" aria-label="Aplicativo">
+          <InstallAppSettings />
+
           <section className="appearance-settings" aria-labelledby="appearance-title">
             <div className="appearance-copy">
               <span className="appearance-icon">

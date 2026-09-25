@@ -141,7 +141,7 @@ test('dashboard e fluxos principais no desktop', async ({ page }) => {
   await expect(page.locator('.brand-mark-image')).toBeVisible()
   await expect(page.locator('.brand-mark-image')).toHaveAttribute(
     'src',
-    '/denguinho-icon.png?v=2',
+    '/icons/icon-192.png',
   )
   await expectNoHorizontalOverflow(page)
 
@@ -262,7 +262,7 @@ test('dashboard e fluxos principais no desktop', async ({ page }) => {
   await expect(settings.getByLabel('Posição horizontal da foto')).toHaveCount(0)
   await settings
     .locator('input[type="file"]')
-    .setInputFiles(path.resolve(process.cwd(), 'public', 'journey-fallback.png'))
+    .setInputFiles(path.resolve(process.cwd(), 'public', 'journey-fallback.webp'))
   await expect(settings.getByLabel('Posição horizontal da foto')).toBeVisible()
   await settings.getByRole('button', { name: 'Concluir ajuste' }).click()
   await expect(
