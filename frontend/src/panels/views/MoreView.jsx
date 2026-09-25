@@ -1,12 +1,27 @@
-import { Bell, ChevronRight, Gift, LogOut, PartyPopper, Settings, Trophy, UserRound } from 'lucide-react'
+import {
+  Bell,
+  ChevronRight,
+  Gift,
+  LogOut,
+  PartyPopper,
+  Settings,
+  Smartphone,
+  Trophy,
+  UserRound,
+} from 'lucide-react'
+import { useInstallApp } from '../../hooks/usePwa'
 
 export function MoreView({ app }) {
+  const { method } = useInstallApp()
   const items = [
     [UserRound, 'Minha conta', 'Foto, nome e senha', app.openAccount],
     [Trophy, 'Conquistas', 'Relembre o progresso de vocês', () => app.openPanel('journey')],
     [PartyPopper, 'Retrospectiva', 'O melhor da semana de vocês', () => app.openPanel('recap')],
     [Gift, 'Surpresa do mês', 'Uma ideia leve para fazer juntos', () => app.openPanel('surprise')],
     [Settings, 'Configurações', 'Jornada, aparência e preferências', app.openSettings],
+    ...(method === 'installed'
+      ? []
+      : [[Smartphone, 'Instalar o app', 'Denguinho na tela inicial do celular', app.openInstall]]),
     [Bell, 'Notificações', 'Veja as novidades de vocês', () => app.openPanel('notifications')],
     [LogOut, 'Sair', 'Voltar para a entrada', app.onLogout],
   ]

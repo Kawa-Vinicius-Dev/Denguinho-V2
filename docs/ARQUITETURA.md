@@ -55,6 +55,10 @@ a frequência de um desafio recalcula o progresso sem migrar dados.
   privadas carregadas com o token.
 - `src/screens`, `src/dashboard`, `src/panels`: telas, blocos do painel e
   painéis modais.
+- `src/lib/pwa.js` e `pwa/`: instalação como app (convite do navegador no
+  Android, passos do Safari no iPhone) e o service worker gerado no build. O
+  service worker atende só o próprio site; a API, em outro domínio, segue
+  direto para a rede.
 
 Uma sincronização periódica que cruza uma alteração feita pela pessoa é
 descartada e refeita, para não trazer de volta um item recém-excluído nem

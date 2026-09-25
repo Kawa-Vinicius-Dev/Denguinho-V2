@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { SESSION_EXPIRED_EVENT, api, session } from './api'
+import { AppUpdateNotice } from './components/AppUpdateNotice'
 import { ToastProvider } from './components/ToastProvider'
 import { readInviteCodeFromUrl } from './lib/invite'
 import { readJson, writeJson, writeText } from './lib/storage'
@@ -91,6 +92,17 @@ export default function App() {
     }
   }, [state.status])
 
+  const retryLoading = useCallback(() => {
+    setState((current) => ({ ...current, status: 'loading', error: '' }))
+  }, [])
+
+  // No celular a conexão cai e volta o tempo todo: quando voltar, tenta sozinho.
+  useEffect(() => {
+    if (state.status !== 'offline') return undefined
+    window.addEventListener('online', retryLoading)
+    return () => window.removeEventListener('online', retryLoading)
+  }, [state.status, retryLoading])
+
   const logout = useCallback(() => {
     session.clear()
     setState(guestState)
@@ -130,7 +142,7 @@ export default function App() {
     screen = (
       <LoadingScreen
         error={state.status === 'offline' ? state.error : ''}
-        onRetry={() => setState((current) => ({ ...current, status: 'loading', error: '' }))}
+        onRetry={retryLoading}
         onLogout={logout}
       />
     )
@@ -170,5 +182,10 @@ export default function App() {
     )
   }
 
-  return <ToastProvider>{screen}</ToastProvider>
+  return (
+    <ToastProvider>
+      <AppUpdateNotice />
+      {screen}
+    </ToastProvider>
+  )
 }

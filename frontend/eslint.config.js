@@ -7,6 +7,7 @@ export default [
   {
     ignores: [
       'dist',
+      'dist-e2e',
       'node_modules',
       '.playwright-python',
       'playwright-report',
@@ -36,9 +37,19 @@ export default [
     },
   },
   {
-    files: ['playwright.config.js', 'e2e/**/*.js'],
+    files: ['playwright.config.js', 'e2e/**/*.js', 'pwa/**/*.js'],
     languageOptions: {
       globals: globals.node,
+    },
+  },
+  {
+    files: ['pwa/service-worker.js'],
+    languageOptions: {
+      globals: {
+        ...globals.serviceworker,
+        __DENGUINHO_SW_VERSION__: 'readonly',
+        __DENGUINHO_SW_PRECACHE__: 'readonly',
+      },
     },
   },
 ]

@@ -1878,6 +1878,130 @@ h2 {
   line-height: 1.45;
 }
 
+/* App no celular (PWA) */
+.install-card {
+  position: relative;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  border: 1px solid #ead7a4;
+  border-radius: 21px;
+  background: #fff8e7;
+}
+
+.install-card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 13px;
+  box-shadow: 0 8px 18px rgba(79, 33, 58, 0.2);
+}
+
+.install-card-copy {
+  padding-right: 34px;
+}
+
+.install-card-copy h2 {
+  margin: 0 0 3px;
+  font-family: 'Fraunces Variable', Georgia, serif;
+  font-size: 18px;
+  font-weight: 620;
+  letter-spacing: -0.02em;
+}
+
+.install-card-copy p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.install-card-actions,
+.install-card .install-steps {
+  grid-column: 1 / -1;
+}
+
+.install-card-actions .button {
+  width: 100%;
+}
+
+.install-card-close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+}
+
+.install-steps {
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  list-style: none;
+  counter-reset: install-step;
+}
+
+.install-steps li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.55;
+  counter-increment: install-step;
+}
+
+.install-steps li::before {
+  content: counter(install-step);
+  width: 22px;
+  height: 22px;
+  flex: none;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #fff7f8;
+  background: var(--plum);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.install-steps svg {
+  color: var(--plum);
+  vertical-align: -3px;
+}
+
+.install-settings {
+  padding: 16px;
+  display: grid;
+  gap: 14px;
+  border: 1px solid #ead7a4;
+  border-radius: 16px;
+  background: #fff8e7;
+}
+
+.install-settings > .button {
+  justify-self: start;
+}
+
+/* No app instalado, segurar um botão não deve selecionar o texto dele. */
+@media (display-mode: standalone) {
+  button,
+  .button {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}
+
 .theme-switcher {
   flex: none;
   padding: 4px;
@@ -4240,7 +4364,8 @@ body.has-dialog {
 
   .dashboard {
     margin-left: 0;
-    padding: 24px 22px calc(100px + env(safe-area-inset-bottom, 0px));
+    padding: 24px max(22px, env(safe-area-inset-right, 0px))
+      calc(100px + env(safe-area-inset-bottom, 0px)) max(22px, env(safe-area-inset-left, 0px));
   }
 
   .dashboard-grid {
@@ -4257,7 +4382,8 @@ body.has-dialog {
 
   .mobile-nav {
     position: fixed;
-    inset: auto 14px calc(13px + env(safe-area-inset-bottom, 0px));
+    inset: auto max(14px, env(safe-area-inset-right, 0px))
+      calc(13px + env(safe-area-inset-bottom, 0px)) max(14px, env(safe-area-inset-left, 0px));
     z-index: 30;
     height: 65px;
     padding: 6px 8px;
@@ -4309,7 +4435,7 @@ body.has-dialog {
 
   .auth-panel {
     min-height: 100vh;
-    padding: 26px 21px;
+    padding: 26px 21px calc(26px + env(safe-area-inset-bottom, 0px));
     background:
       radial-gradient(circle at 85% 4%, rgba(246, 233, 200, 0.95), transparent 27%),
       var(--paper);
@@ -4392,7 +4518,8 @@ body.has-dialog {
 
 @media (max-width: 520px) {
   .dashboard {
-    padding: 20px 14px calc(96px + env(safe-area-inset-bottom, 0px));
+    padding: 20px max(14px, env(safe-area-inset-right, 0px))
+      calc(96px + env(safe-area-inset-bottom, 0px)) max(14px, env(safe-area-inset-left, 0px));
   }
 
   .app-credit {
@@ -4851,6 +4978,16 @@ body.has-dialog {
 [data-theme='dark'] .appearance-settings {
   border-color: #6b5827;
   background: #2a2315;
+}
+
+[data-theme='dark'] .install-card,
+[data-theme='dark'] .install-settings {
+  border-color: #6b5827;
+  background: #2a2315;
+}
+
+[data-theme='dark'] .install-steps li::before {
+  color: #1c1710;
 }
 
 [data-theme='dark'] .settings-tabs {

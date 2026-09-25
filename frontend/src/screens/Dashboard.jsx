@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { ArrowRight, Bell, MessageCircleHeart, RefreshCw, Sparkles, WifiOff } from 'lucide-react'
 import { api } from '../api'
+import { InstallAppCard } from '../components/InstallApp'
 import { ChallengeCard } from '../dashboard/ChallengeCard'
 import { ChallengeEmptyState } from '../dashboard/ChallengeEmptyState'
 import { FocusCard } from '../dashboard/FocusCard'
@@ -69,7 +70,7 @@ export function Dashboard({
     null,
   )
   const [panel, setPanel] = useState(null)
-  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [settingsTab, setSettingsTab] = useState(null)
   const [accountOpen, setAccountOpen] = useState(false)
   const [advancingId, setAdvancingId] = useState('')
   const [photoUrl, reloadPhoto] = useProtectedImage(couple.hasCustomPhoto, api.getPhotoUrl)
@@ -181,7 +182,11 @@ export function Dashboard({
     onLogout,
     openSettings: () => {
       setPanel(null)
-      setSettingsOpen(true)
+      setSettingsTab('journey')
+    },
+    openInstall: () => {
+      setPanel(null)
+      setSettingsTab('app')
     },
     openAccount: () => {
       setPanel(null)
@@ -243,12 +248,14 @@ export function Dashboard({
 
         <div className="dashboard-grid">
           <div className="main-column">
+            <InstallAppCard />
+
             <JourneyCard
               couple={couple}
               imageUrl={photoUrl}
               jointProgress={jointProgress(challenges)}
               today={today}
-              onSettings={() => setSettingsOpen(true)}
+              onSettings={() => setSettingsTab('journey')}
             />
 
             <MomentCard
@@ -353,8 +360,9 @@ export function Dashboard({
       {panel ? (
         <ActionPanel key={`${panel.view}-${panel.challengeId || ''}`} panel={panel} app={app} />
       ) : null}
-      {settingsOpen ? (
+      {settingsTab ? (
         <SettingsPanel
+          initialTab={settingsTab}
           couple={couple}
           currentImage={photoUrl}
           theme={theme}
@@ -362,7 +370,7 @@ export function Dashboard({
           preferences={preferences}
           onPreferenceChange={onPreferenceChange}
           notify={notify}
-          onClose={() => setSettingsOpen(false)}
+          onClose={() => setSettingsTab(null)}
           onUpdated={(updated, { photoChanged }) => {
             onCoupleChange(updated)
             if (photoChanged) reloadPhoto()
